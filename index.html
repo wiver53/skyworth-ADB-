@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>skyworthADBOpenToolBox</title>
+    <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
+    <style>
+        /* Material Design 3 全局变量（标准M3配色体系） */
+        :root {
+            --md-primary: #415F91;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #D6E3FF;
+            --md-on-primary-container: #001B3E;
+            --md-secondary: #565F71;
+            --md-on-secondary: #FFFFFF;
+            --md-surface: #F5F7FB;
+            --md-surface-container: #E9EDF4;
+            --md-surface-container-high: #DDE2E9;
+            --md-on-surface: #191C20;
+            --md-on-surface-variant: #44474E;
+            --md-outline: #74777F;
+            --md-shadow-1: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+            --md-shadow-2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+            --md-radius-full: 9999px;
+            --md-radius-lg: 16px;
+            --md-radius-md: 12px;
+            --md-transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: Roboto, system-ui, -apple-system, 'Segoe UI', '微软雅黑', sans-serif;
+            background-color: var(--md-surface);
+            padding: 24px;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        .page-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--md-on-surface);
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: var(--md-on-surface-variant);
+            margin-bottom: 32px;
+        }
+        /* 顶部左右布局：左侧输入区 + 右侧FAB大按钮 */
+        .top-row {
+            display: flex;
+            gap: 24px;
+            align-items: flex-end;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .input-column {
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        /* M3 填充式文本框 */
+        .m3-text-field {
+            position: relative;
+        }
+        .m3-text-field input {
+            width: 100%;
+            padding: 16px 16px 12px;
+            background: var(--md-surface-container);
+            border: 1px solid var(--md-outline);
+            border-radius: var(--md-radius-md);
+            font-size: 16px;
+            color: var(--md-on-surface);
+            transition: var(--md-transition);
+            outline: none;
+        }
+        .m3-text-field input:focus {
+            border-color: var(--md-primary);
+            border-width: 2px;
+            background: var(--md-surface-container-high);
+        }
+        .m3-text-field label {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            color: var(--md-on-surface-variant);
+            pointer-events: none;
+            transition: var(--md-transition);
+            background: var(--md-surface);
+            padding: 0 4px;
+        }
+        .m3-text-field input:focus ~ label,
+        .m3-text-field input:not(:placeholder-shown) ~ label {
+            top: 4px;
+            font-size: 12px;
+            color: var(--md-primary);
+        }
+        /* M3 右侧大FAB按钮（安卓12规范） */
+        .m3-fab-large {
+            padding: 0 28px;
+            height: 64px;
+            border-radius: var(--md-radius-full);
+            background: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: var(--md-shadow-2);
+            cursor: pointer;
+            transition: var(--md-transition);
+            white-space: nowrap;
+        }
+        .m3-fab-large:hover {
+            box-shadow: var(--md-shadow-2);
+            filter: brightness(0.96);
+        }
+        .m3-fab-large:active {
+            box-shadow: var(--md-shadow-1);
+            filter: brightness(0.92);
+        }
+        /* 下方信息区域 */
+        .info-card {
+            background: var(--md-surface-container);
+            border-radius: var(--md-radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            font-family: ui-monospace, monospace;
+            font-size: 13px;
+            color: var(--md-on-surface);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        /* 超大授权码结果区 */
+        .result-card {
+            background: var(--md-primary-container);
+            border-radius: var(--md-radius-lg);
+            padding: 32px 24px;
+            text-align: center;
+        }
+        .result-title {
+            font-size: 18px;
+            color: var(--md-on-primary-container);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .result-code {
+            font-size: clamp(48px, 10vw, 72px);
+            font-weight: 700;
+            color: var(--md-on-primary-container);
+            letter-spacing: 2px;
+            word-break: break-all;
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--md-on-surface-variant);
+            margin-top: 40px;
+        }
+        @media (max-width: 560px) {
+            .top-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .m3-fab-large {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+    <h1>创维ADB随机码计算工具</h1>
+    <div class="subtitle">MD3 Material Design 3 风格界面</div>
+
+    <div class="top-row">
+        <div class="input-column">
+            <div class="m3-text-field">
+                <input type="text" id="mac" placeholder=" " autocomplete="off">
+                <label>机顶盒MAC地址</label>
+            </div>
+            <div class="m3-text-field">
+                <input type="text" id="random" placeholder=" " autocomplete="off">
+                <label>动态随机密码</label>
+            </div>
+        </div>
+        <button class="m3-fab-large" id="calcBtn">开始计算</button>
+    </div>
+
+    <div class="info-card" id="infoArea">拼接字符串：
+MD5值：</div>
+
+    <div class="result-card">
+        <div class="result-title">计算结果（授权码）</div>
+        <div class="result-code" id="resultValue">—</div>
+    </div>
+
+    <footer>工具仅供学习使用👌🏾</footer>
+</div>
+
+<script>
+    // 计算和值函数（完全还原原有逻辑，一丝未改）
+    function calculateNumber(md5Str) {
+        if (!md5Str || md5Str.length < 32) return 0;
+        let beforeStr = md5Str.substring(0, 16);
+        let afterStr  = md5Str.substring(16, 32);
+
+        let beforeNum = 0;
+        for (let i = 0; i < beforeStr.length; i++) {
+            let ch = beforeStr[i];
+            let val = ch.charCodeAt(0) - 48;
+            beforeNum += parseInt(val, 10);
+        }
+
+        let afterNum = 0;
+        for (let i = 0; i < afterStr.length; i++) {
+            let ch = afterStr[i];
+            let val = ch.charCodeAt(0) - 48;
+            afterNum += parseInt(val, 10);
+        }
+        return beforeNum * afterNum;
+    }
+
+    // 主计算函数（原有逻辑完全保留）
+    function compute() {
+        const mac = document.getElementById('mac').value.trim();
+        const randomVal = document.getElementById('random').value.trim();
+
+        if (!mac || !randomVal) {
+            alert('请填写 MAC 地址和随机数');
+            return;
+        }
+
+        const fullStr = `JSCMCC_SKYWORTH${mac}${randomVal}tianhuaxin@skyworth.com`;
+        const md5Hash = md5(fullStr);
+        const finalNum = calculateNumber(md5Hash);
+
+        document.getElementById('infoArea').innerHTML = `拼接字符串：
+${escapeHtml(fullStr)}
+
+MD5值：
+${md5Hash}`;
+        document.getElementById('resultValue').innerHTML = finalNum;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', compute);
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(inp => {
+        inp.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') compute();
+        });
+    });
+</script>
+</body>
+</html>
